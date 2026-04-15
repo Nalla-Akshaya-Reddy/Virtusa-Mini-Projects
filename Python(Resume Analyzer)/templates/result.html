@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis Results — Resume Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f7f5; --surface: #ffffff; --border: #e4e2dc;
+      --text: #1a1a18; --muted: #6b6b68;
+      --accent: #2563eb; --accent-light: #eff3ff;
+      --green: #16a34a; --green-light: #f0fdf4;
+      --amber: #d97706; --amber-light: #fffbeb;
+      --red: #dc2626; --red-light: #fef2f2;
+      --radius: 12px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    header a { font-size: 0.875rem; color: var(--accent); text-decoration: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+    h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+    h3 { font-size: 0.875rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+
+    /* Score hero */
+    .score-hero { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+    .score-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+    .score-num { font-size: 2rem; font-weight: 600; line-height: 1; }
+    .score-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .score-bar-wrap { flex: 1; min-width: 200px; }
+    .score-bar-bg { background: var(--bg); border-radius: 99px; height: 10px; overflow: hidden; margin-bottom: 6px; }
+    .score-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+    .score-desc { font-size: 0.875rem; color: var(--muted); }
+
+    /* Stats row */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .stat { background: var(--bg); border-radius: 8px; padding: 1rem; }
+    .stat-val { font-size: 1.4rem; font-weight: 600; }
+    .stat-key { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    /* Skills */
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 0.8rem; padding: 4px 12px; border-radius: 99px; font-family: 'DM Mono', monospace; }
+    .tag-found { background: var(--green-light); color: var(--green); }
+    .tag-missing { background: var(--red-light); color: var(--red); }
+    .tag-cat { background: var(--accent-light); color: var(--accent); }
+
+    /* Sections */
+    .section-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .section-item { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot-yes { background: var(--green); }
+    .dot-no { background: #d1d5db; }
+
+    /* Suggestions */
+    .suggestions { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .suggestions li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; line-height: 1.55; }
+    .tip-icon { flex-shrink: 0; width: 22px; height: 22px; background: var(--amber-light); color: var(--amber); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; margin-top: 1px; }
+
+    /* Contact */
+    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .contact-item { font-size: 0.875rem; }
+    .contact-key { color: var(--muted); font-size: 0.8rem; }
+    .contact-val { font-family: 'DM Mono', monospace; font-size: 0.8rem; }
+    .missing-val { color: #d1d5db; font-style: italic; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 640px) { .stats { grid-template-columns: 1fr 1fr; } .grid2 { grid-template-columns: 1fr; } .section-grid { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr; } }
+    .back-btn { display: inline-block; margin-top: 1rem; font-size: 0.875rem; color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Resume Analyzer</h1>
+    <a href="/">← Analyze another</a>
+  </header>
+
+  <div class="container">
+
+    <!-- Score Card -->
+    {% set score = result.score %}
+    {% if score >= 65 %}
+      {% set color = "#16a34a" %} {% set bg = "#f0fdf4" %} {% set verdict = "Strong match" %}
+    {% elif score >= 40 %}
+      {% set color = "#d97706" %} {% set bg = "#fffbeb" %} {% set verdict = "Moderate match" %}
+    {% else %}
+      {% set color = "#dc2626" %} {% set bg = "#fef2f2" %} {% set verdict = "Low match" %}
+    {% endif %}
+
+    <div class="card">
+      <h2>Match Score — {{ filename }} → {{ job_role }}</h2>
+      <div class="score-hero">
+        <div class="score-circle" style="background:{{ bg }}; border: 2px solid {{ color }}20;">
+          <span class="score-num" style="color:{{ color }};">{{ score }}%</span>
+          <span class="score-label">match</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-bg">
+            <div class="score-bar-fill" id="score-bar" style="width: 0%; background: {{ color }};"></div>
+          </div>
+          <div style="font-size: 1rem; font-weight: 600; color: {{ color }}; margin-bottom: 4px;">{{ verdict }}</div>
+          <div class="score-desc">Based on keyword overlap and TF-IDF similarity between your resume and the job description.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-val">{{ result.all_skills | length }}</div>
+          <div class="stat-key">Skills detected</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">{{ result.missing_skills | length }}</div>
+          <div class="stat-key">Skills to add</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">{{ result.word_count }}</div>
+          <div class="stat-key">Words in resume</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- Skills Found -->
+      <div class="card">
+        <h3>Skills found in resume</h3>
+        {% for cat, skills in result.skills.items() %}
+          {% if skills %}
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">{{ cat }}</div>
+              <div class="skill-tags">
+                {% for s in skills %}<span class="tag tag-found">{{ s }}</span>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+        {% if not result.all_skills %}
+          <p style="color: var(--muted); font-size: 0.875rem;">No recognized skills detected. Make sure your resume has clear skill keywords.</p>
+        {% endif %}
+      </div>
+
+      <!-- Missing Skills -->
+      <div class="card">
+        <h3>Skills in JD but missing</h3>
+        {% if result.missing_skills %}
+          <div class="skill-tags">
+            {% for s in result.missing_skills %}<span class="tag tag-missing">{{ s }}</span>{% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--green); font-size: 0.875rem;">Great — no major skill gaps detected!</p>
+        {% endif %}
+
+        <div style="margin-top: 1.25rem;">
+          <h3>Resume sections</h3>
+          <div class="section-grid">
+            {% for sec, present in result.sections.items() %}
+            <div class="section-item">
+              <div class="dot {{ 'dot-yes' if present else 'dot-no' }}"></div>
+              <span>{{ sec | capitalize }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- Suggestions -->
+      <div class="card">
+        <h3>Suggestions</h3>
+        <ul class="suggestions">
+          {% for tip in result.suggestions %}
+          <li>
+            <div class="tip-icon">→</div>
+            <span>{{ tip }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="card">
+        <h3>Contact info detected</h3>
+        <div class="contact-grid">
+          {% for key, val in result.contact.items() %}
+          <div class="contact-item">
+            <div class="contact-key">{{ key }}</div>
+            <div class="contact-val {% if not val %}missing-val{% endif %}">{{ val if val else "not found" }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <a href="/" class="back-btn">← Analyze another resume</a>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      document.getElementById('score-bar').style.width = '{{ score }}%';
+    }, 200);
+  </script>
+</body>
+</html>

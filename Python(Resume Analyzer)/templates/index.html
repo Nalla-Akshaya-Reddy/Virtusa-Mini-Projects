@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --border: #e4e2dc;
+      --text: #1a1a18;
+      --muted: #6b6b68;
+      --accent: #2563eb;
+      --accent-light: #eff3ff;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --radius: 12px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    header span { font-family: 'DM Mono', monospace; font-size: 0.75rem; background: var(--accent-light); color: var(--accent); padding: 3px 10px; border-radius: 99px; }
+    .container { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); }
+    label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; color: var(--muted); }
+    input[type="text"], textarea, select {
+      width: 100%; padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      background: var(--bg); color: var(--text);
+      transition: border-color 0.15s;
+      margin-bottom: 1.25rem;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 140px; }
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 1.25rem;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
+    .upload-zone p { color: var(--muted); font-size: 0.875rem; margin-top: 6px; }
+    .upload-zone strong { font-size: 0.95rem; }
+    #file-name { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--green); margin-top: 8px; }
+    input[type="file"] { display: none; }
+    .btn {
+      width: 100%; padding: 0.8rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .flash { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1rem; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .history-table th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+    .history-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .score-pill { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+    .score-high { background: var(--green-light); color: var(--green); }
+    .score-mid { background: #fefce8; color: #854d0e; }
+    .score-low { background: #fef2f2; color: #b91c1c; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Resume Analyzer</h1>
+    <span>Virtusa Project</span>
+  </header>
+
+  <div class="container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="flash">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/analyze" enctype="multipart/form-data">
+      <div class="card">
+        <h2>Upload Resume & Job Details</h2>
+        <div class="grid">
+          <div>
+            <label>Resume PDF</label>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('resume-input').click()">
+              <strong>Click to upload PDF</strong>
+              <p>or drag and drop here</p>
+              <div id="file-name"></div>
+            </div>
+            <input type="file" id="resume-input" name="resume" accept=".pdf" onchange="showFileName(this)" />
+          </div>
+          <div>
+            <label>Job Role (optional)</label>
+            <input type="text" name="job_role" placeholder="e.g. Backend Developer, Data Analyst" />
+            <label>Job Description</label>
+            <textarea name="job_description" placeholder="Paste the full job description here..."></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn">Analyze Resume →</button>
+      </div>
+    </form>
+
+    {% if history %}
+    <div class="card">
+      <h2>Recent Analyses</h2>
+      <table class="history-table">
+        <thead><tr><th>File</th><th>Role</th><th>Score</th><th>When</th></tr></thead>
+        <tbody>
+          {% for h in history %}
+          <tr>
+            <td>{{ h.filename }}</td>
+            <td>{{ h.job_role }}</td>
+            <td>
+              <span class="score-pill {% if h.score >= 65 %}score-high{% elif h.score >= 40 %}score-mid{% else %}score-low{% endif %}">
+                {{ h.score }}%
+              </span>
+            </td>
+            <td>{{ h.timestamp }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function showFileName(input) {
+      const name = input.files[0]?.name || '';
+      document.getElementById('file-name').textContent = name ? '✓ ' + name : '';
+    }
+    const zone = document.getElementById('upload-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        document.getElementById('resume-input').files = e.dataTransfer.files;
+        document.getElementById('file-name').textContent = '✓ ' + file.name;
+      }
+    });
+  </script>
+</body>
+</html>
