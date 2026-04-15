@@ -92,7 +92,7 @@ java Main
 * Check balance
 * View transaction history
 
-## Sample Ouputs:
+## Sample Outputs:
 ![Initial Sevices ouput (create account , login , exit) and sample account creation too](image.png)
 ![login](image-1.png)
 ![deposit service](image-2.png)

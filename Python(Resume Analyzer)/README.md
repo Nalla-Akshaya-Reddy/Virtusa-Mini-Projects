@@ -44,10 +44,7 @@ uploads/ → temporary files
 > Run the app
 
 # Output screenshots
-
-<img width="674" height="386" alt="ouput" src="https://github.com/user-attachments/assets/97c13801-9494-47e3-9385-353243a6a4a8" />
-
-<img width="693" height="786" alt="Analyzed resume output" src="https://github.com/user-attachments/assets/7c573034-b84f-4485-927b-9ca9e63b8046" />
-
+![output](output.png)
+![analyzed and suggestions](analyzed_suggestions.png)
 
 
