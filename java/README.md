@@ -48,7 +48,7 @@ This project is a console-based banking system developed using Core Java. It sim
   * HashMap for user management
 
 ## Project Structure
-
+```
 java/
  ├── model/
  │    ├── Account.java
@@ -62,7 +62,7 @@ java/
  │
  └── Main.java
 
-
+```
 ## How to Run
 
 Step 1: Navigate to the project folder
