@@ -28,7 +28,7 @@ Web-based resume analyzer built with flask that match resumes with job descripti
 
 
 # Project Structure
-
+```
 resume_analyzer/
 
 app.py → handles routes and file upload
@@ -36,7 +36,7 @@ resume_analyzer.py → main logic (NLP + scoring)
 templates/ → HTML pages
 data/history.db → SQLite database
 uploads/ → temporary files
-
+```
 # Instructions to run
 > Create a virtual Environment
 > Activate it
